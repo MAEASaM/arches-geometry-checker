@@ -8,7 +8,6 @@ from qgis.core import (
     QgsFeature,
     QgsGeometry,
     QgsVectorDataProvider,
-    QgsVectorFileWriter,
     QgsWkbTypes,
 )
 from PyQt5.QtCore import QVariant
@@ -16,26 +15,35 @@ from PyQt5.QtCore import QVariant
 import argparse
 import csv
 
-# Parser = argparse.ArgumentParser(description='Check geometry validity for Arches')
+Parser = argparse.ArgumentParser(description="Check geometry validity for Arches")
 
-# Parser.add_argument('--input', '-i', dest='input', required=True, help='Input file')
+Parser.add_argument(
+    "--input",
+    "-i",
+    dest="input",
+    required=True,
+    help="Input file deafults to ../data/example.csv",
+    default=pathlib.Path("../data/example.csv"),
+)
 
-# args = Parser.parse_args()
-# inputfile_name = pathlib.Path(args.input).name
-# output = pathlib.Path(args.input).parent / (str(inputfile_name.stem) + '_valid' + str(inputfile_name.suffix))
+args = Parser.parse_args()
+inputfile_path = args.input
+inputfile_name = pathlib.Path(args.input).name
+outputfile_path = pathlib.Path(args.input).parent / (
+    str(inputfile_name.stem) + "_valid" + str(inputfile_name.suffix)
+)
 
 maxNodes = 150
 
 QgsApplication.setPrefixPath("/usr/bin/qgis", True)
 QgsApplication.setPrefixPath("/usr/share/qt5", True)
 
-csv_file = pathlib.Path("../data/example.csv")
 
 memory_layer = QgsVectorLayer("Polygon?crs=EPSG:4326", "memory_layer", "memory")
 
 
 # Open the CSV file for reading
-with open(csv_file, "r") as csv_file:
+with open(inputfile_path, "r") as csv_file:
     # Read the CSV data using the Python CSV reader
     csv_data = csv.DictReader(csv_file)
 
@@ -75,6 +83,7 @@ with open(csv_file, "r") as csv_file:
 
     # Refresh the layer
     memory_layer.updateExtents()
+
 
 def write_polygon_geometry_and_resource_id_to_a_new_feature(
     memory_layer, feature, polygon_geometry
@@ -140,7 +149,6 @@ options.driverName = "CSV"
 options.fileEncoding = "UTF-8"
 options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
 options.layerOptions = ["GEOMETRY=AS_WKT"]
-
 
 # Write the layer to CSV
 success, message = QgsVectorFileWriter.writeAsVectorFormat(
