@@ -47,6 +47,12 @@ outputfile_path = Path(args.input).parent / (
     str(inputfile_name) + "_valid" + str(inputfile_suffix)
 )
 
+# check if the input file exists
+if not Path(inputfile_path).is_file():
+    print("Input file does not exist")
+    exit()
+
+
 maxNodes = int(args.maxNodes)
 
 QgsApplication.setPrefixPath("/usr/bin/qgis", True)
