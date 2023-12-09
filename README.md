@@ -28,7 +28,7 @@
 
 10. You can now work with the repository inside the devcontainer environment.
 
-11. You can also run the script manually by running the following command in the terminal:
+11. You can also run the script manually by running the following command in Visual Studio Code terminal:
 
     ```bash
     python3.9 main.py
