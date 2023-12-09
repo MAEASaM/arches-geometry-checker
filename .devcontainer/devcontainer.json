@@ -12,7 +12,14 @@
 	"postAttachCommand": "python3.9 /workspaces/arches-geometry-checker/src/main.py",
 	// Remove the "dockerComposeFile" property
 	// Remove the "service" property
-    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"elagil.pre-commit-helper"
+			]
+		}
+	}
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
