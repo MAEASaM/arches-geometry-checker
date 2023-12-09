@@ -52,9 +52,7 @@ maxNodes = int(args.maxNodes)
 QgsApplication.setPrefixPath("/usr/bin/qgis", True)
 QgsApplication.setPrefixPath("/usr/share/qt5", True)
 
-
 memory_layer = QgsVectorLayer("Polygon?crs=EPSG:4326", "memory_layer", "memory")
-
 
 with open(inputfile_path, "r") as csv_file:
     csv_data = csv.DictReader(csv_file)
