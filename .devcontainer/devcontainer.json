@@ -10,16 +10,19 @@
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	"postAttachCommand": "python3.9 /workspaces/arches-geometry-checker/src/main.py",
+	// Remove the "dockerComposeFile" property
+	// Remove the "service" property
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
 	// Configure tool-specific properties.
 	// "customizations": {},
-	"workspaceMount": "source=${localWorkspaceFolder}/data,target=/workspace,type=bind",
-	"workspaceFolder": "/workspace"
+	// "workspaceMount": "source=${localWorkspaceFolder}/data,target=/workspace,type=bind",
+	// "workspaceFolder": "/workspace"
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 	// "mounts": [
-	// 	"source=${localWorkspaceFolder}/data,target=/data,type=bind,consistency=cached"
+	// 	"source=data,target=/data,type=bind,consistency=cached"
 	// ]
 }
