@@ -5,8 +5,6 @@ from PyQt5.QtCore import QVariant
 import argparse
 import csv
 
-
-
 # Parser = argparse.ArgumentParser(description='Check geometry validity for Arches')
 
 # Parser.add_argument('--input', '-i', dest='input', required=True, help='Input file')
@@ -14,10 +12,6 @@ import csv
 # args = Parser.parse_args()
 # inputfile_name = pathlib.Path(args.input).name
 # output = pathlib.Path(args.input).parent / (str(inputfile_name.stem) + '_valid' + str(inputfile_name.suffix))
-
-
-
-
 
 maxNodes = 150
 
