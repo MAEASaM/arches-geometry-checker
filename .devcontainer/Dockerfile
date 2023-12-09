@@ -12,3 +12,6 @@ RUN wget -O /etc/apt/keyrings/qgis-archive-keyring.gpg https://download.qgis.org
 
 RUN apt-get update && apt-get install -y \
     qgis qgis-plugin-grass
+
+# copy src to container
+COPY ./src .

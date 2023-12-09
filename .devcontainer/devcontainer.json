@@ -4,11 +4,12 @@
 	"name": "arches-geometry-checker-dev",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"build": {
-		"dockerfile": "Dockerfile"
-	}
+		"dockerfile": "Dockerfile",
+		"context": "..",
+	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
-
+	"postAttachCommand": "/usr/bin/python3.9 /workspaces/arches-geometry-checker/src/main.py"
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
