@@ -1,22 +1,28 @@
 import pathlib
-from qgis.core import QgsVectorFileWriter, QgsVectorLayer, QgsApplication, QgsFields, QgsField, QgsFeature, QgsGeometry, QgsVectorDataProvider, QgsVectorLayerExporter, QgsWkbTypes, QgsVectorLayerExporter
+from qgis.core import QgsVectorFileWriter, QgsVectorLayer, QgsApplication, QgsFields, QgsField, QgsFeature, QgsGeometry, QgsVectorDataProvider, QgsVectorFileWriter, QgsWkbTypes
 from PyQt5.QtCore import QVariant
 
 import argparse
 import csv
 
 
+
+# Parser = argparse.ArgumentParser(description='Check geometry validity for Arches')
+
+# Parser.add_argument('--input', '-i', dest='input', required=True, help='Input file')
+
+# args = Parser.parse_args()
+# inputfile_name = pathlib.Path(args.input).name
+# output = pathlib.Path(args.input).parent / (str(inputfile_name.stem) + '_valid' + str(inputfile_name.suffix))
+
+
+
+
+
+maxNodes = 150
+
 QgsApplication.setPrefixPath("/usr/bin/qgis", True)
 QgsApplication.setPrefixPath("/usr/share/qt5", True)
-
-# qgs = QgsApplication([], False)
-# qgs.initQgis()
-# QgsApplication.setThemeName("PANTHEON")
-# dummy_feedback = QgsProcessingFeedback()
-# QgsApplication.processingFeedback().setProgressText(dummy_feedback)
-
-
-
 
 csv_file = pathlib.Path("../data/example.csv")
 
@@ -70,45 +76,48 @@ with open(csv_file, "r") as csv_file:
 
 
 
-# Parser = argparse.ArgumentParser(description='Check geometry validity for Arches')
-
-# Parser.add_argument('--input', '-i', dest='input', required=True, help='Input file')
-
-# args = Parser.parse_args()
-# inputfile_name = pathlib.Path(args.input).name
-# output = pathlib.Path(args.input).parent / (str(inputfile_name.stem) + '_valid' + str(inputfile_name.suffix))
-
-
 # vector_layer = QgsVectorLayer(str(csv_file), "csv_layer", "delimitedtext")
 
 # print(vector_layer.geometryType())
+def write_polygon_geometry_and_resource_id_to_a_new_feature(memory_layer, feature, polygon_geometry):
+    # Create a new feature
+    new_feature = QgsFeature(fields)
+
+    # Set geometry and ResourceID
+    new_feature.setGeometry(polygon_geometry)
+    new_feature.setAttribute("ResourceID", feature.attribute("ResourceID"))
+
+    # Add the feature to the layer
+    memory_layer.dataProvider().addFeature(new_feature)
+
+def spilt_one_polygon_into_parts(polygon_geometry):
+    subdivided_polygon = polygon_geometry.subdivide(maxNodes=maxNodes) 
+    return subdivided_polygon
+
+def spilt_geometry_into_parts(geometry):
+    if geometry.isMultipart():
+        list_of_geometries = geometry.asGeometryCollection()
+    else:
+        list_of_geometries = [geometry]
+    
+    subdivided_parts = []
+    for polygon_geometry in list_of_geometries:    
+        subdivided_part = spilt_one_polygon_into_parts(polygon_geometry)
+        subdivided_parts = subdivided_parts + subdivided_part.asGeometryCollection()
+    
+    return subdivided_parts
 
 for feature in memory_layer.getFeatures():
-    if (not feature.geometry().isEmpty()) and(not feature.geometry().isNull()):
-        # Get the geometry of the feature
-        original_geometry = feature.geometry()
-        # Check if the geometry is a polygon and is not empty
-        if original_geometry.isMultipart():  # Check if the geometry is a polygon
-            # Iterate over the parts (rings) of the multipart geometry
-            subdivided_parts = []
-            for part in original_geometry.asGeometryCollection():
-                # Apply the subdivide method to each part
-                subdivided_part = part.subdivide(maxNodes=150)  # Replace 10 with your desired max nodes
-                subdivided_parts.append(subdivided_part)
-                if feature.attribute("ResourceID") == "ADMN-KEN-0000015":
-                    print(subdivided_part)
-            if len(subdivided_parts) == 1:
-                memory_layer.dataProvider().changeGeometryValues({feature.id(): subdivided_parts[0]})
-            else:
-                # create a new feature for each part with olny the geometry and ResourceID
-                for subdivided_part in subdivided_parts:
-                    new_feature = QgsFeature(fields)
-                    new_feature.setGeometry(subdivided_part)
-                    new_feature.setAttribute("ResourceID", feature.attribute("ResourceID"))
-                    memory_layer.dataProvider().addFeature(new_feature)
-                # delete the original feature
-                memory_layer.dataProvider().deleteFeatures([feature.id()])
-
+    if (not feature.geometry().isEmpty()) and \
+    (not feature.geometry().isNull()) and \
+    ((feature.geometry().wkbType() == QgsWkbTypes.PolygonGeometry)  or (feature.geometry().wkbType() == QgsWkbTypes.MultiPolygon)):
+        subdivided_parts = spilt_geometry_into_parts(feature.geometry())
+        if len(subdivided_parts) > 0: 
+            feature.setGeometry(subdivided_parts[0])
+            memory_layer.dataProvider().changeGeometryValues({feature.id(): subdivided_parts[0]})
+            if len(subdivided_parts) > 1:
+                for subdivided_part in subdivided_parts[1:]:
+                    write_polygon_geometry_and_resource_id_to_a_new_feature(memory_layer, feature, subdivided_part)
 # # Save changes to the layer
 memory_layer.commitChanges()
 
@@ -123,4 +132,4 @@ options.layerOptions = ['GEOMETRY=AS_WKT']
 
 
 # Write the layer to CSV
-success, message = QgsVectorFileWriter.writeAsVectorFormat(memory_layer, csv_output_path, options)
+success, message = QgsVectorFileWriter.writeAsVectorFormat(layer=memory_layer, fileName=csv_output_path, options=options)
