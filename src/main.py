@@ -139,7 +139,7 @@ for feature in memory_layer.getFeatures():
         (not feature.geometry().isEmpty())
         and (not feature.geometry().isNull())
         and (
-            (feature.geometry().wkbType() == QgsWkbTypes.PolygonGeometry)
+            (feature.geometry().wkbType() == QgsWkbTypes.Polygon)
             or (feature.geometry().wkbType() == QgsWkbTypes.MultiPolygon)
         )
     ):
