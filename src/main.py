@@ -9,7 +9,7 @@ from qgis.core import (
     QgsGeometry,
     QgsVectorDataProvider,
     QgsWkbTypes,
-    QgsTopologyPreservingSimplifier
+    QgsTopologyPreservingSimplifier,
 )
 from PyQt5.QtCore import QVariant
 
@@ -113,8 +113,11 @@ with open(inputfile_path, "r") as csv_file:
 
     memory_layer.updateExtents()
 
+
 def simplify_geometry(geometry, simplifyingTolerance):
-    topology_preserving_simplifier = QgsTopologyPreservingSimplifier(simplifyingTolerance)
+    topology_preserving_simplifier = QgsTopologyPreservingSimplifier(
+        simplifyingTolerance
+    )
     simplified_geometry = topology_preserving_simplifier.simplify(geometry)
     return simplified_geometry
 
@@ -130,9 +133,11 @@ def write_polygon_geometry_and_resource_id_to_a_new_feature(
     memory_layer.dataProvider().addFeature(new_feature)
 
 
-def spilt_one_polygon_into_parts(polygon_geometry, simplify_switch = True):
+def spilt_one_polygon_into_parts(polygon_geometry, simplify_switch=True):
     if simplify_switch:
-        polygon_geometry = simplify_geometry(polygon_geometry, simplifyingTolerance = simplifyingTolerance)
+        polygon_geometry = simplify_geometry(
+            polygon_geometry, simplifyingTolerance=simplifyingTolerance
+        )
     subdivided_polygon = polygon_geometry.subdivide(maxNodes=maxNodes)
     return subdivided_polygon
 
