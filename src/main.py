@@ -15,17 +15,18 @@ from PyQt5.QtCore import QVariant
 import argparse
 import csv
 import sys
+
 maxInt = sys.maxsize
 
 while True:
-    # decrease the maxInt value by factor 10 
+    # decrease the maxInt value by factor 10
     # as long as the OverflowError occurs.
 
     try:
         csv.field_size_limit(maxInt)
         break
     except OverflowError:
-        maxInt = int(maxInt/10)
+        maxInt = int(maxInt / 10)
 
 
 current_file_path = Path(__file__).parent.absolute()
