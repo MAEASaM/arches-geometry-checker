@@ -7,28 +7,23 @@ from qgis.core import (
     QgsField,
     QgsFeature,
     QgsGeometry,
-    QgsVectorDataProvider,
     QgsWkbTypes,
     QgsTopologyPreservingSimplifier,
 )
 from PyQt5.QtCore import QVariant
-
 import argparse
 import csv
 import sys
+import re
 
 maxInt = sys.maxsize
 
 while True:
-    # decrease the maxInt value by factor 10
-    # as long as the OverflowError occurs.
-
     try:
         csv.field_size_limit(maxInt)
         break
     except OverflowError:
         maxInt = int(maxInt / 10)
-
 
 current_file_path = Path(__file__).parent.absolute()
 current_file_parent_path = Path(__file__).parent.parent.absolute()
@@ -62,6 +57,13 @@ Parser.add_argument(
     required=False,
 )
 
+Parser.add_argument(
+    "--organiseID",
+    "-o",
+    dest="organiseID",
+    action="store_true",
+    help="Organises the rows in the csv based on the numerical sequence of the ResourceID",
+    required=False,)
 
 args = Parser.parse_args()
 inputfile_path = args.input
@@ -85,6 +87,9 @@ QgsApplication.setPrefixPath("/usr/share/qt5", True)
 
 memory_layer = QgsVectorLayer("Polygon?crs=EPSG:4326", "memory_layer", "memory")
 
+fieldnames = []
+data_rows = []
+
 with open(inputfile_path, "r") as csv_file:
     csv_data = csv.DictReader(csv_file)
 
@@ -105,6 +110,10 @@ with open(inputfile_path, "r") as csv_file:
             if fieldname != "Geometry":
                 feature.setAttribute(fieldname, row[fieldname])
 
+        for id_index in list_of_csv_fieldnames:
+            if id_index != "ResourceID":
+                feature.setAttribute(fieldname, row[id_index])
+        
         wkt_geometry = row["Geometry"]
         geometry = QgsGeometry.fromWkt(wkt_geometry)
         feature.setGeometry(geometry)
@@ -112,7 +121,6 @@ with open(inputfile_path, "r") as csv_file:
         memory_layer.dataProvider().addFeature(feature)
 
     memory_layer.updateExtents()
-
 
 def simplify_geometry(geometry, simplifyingTolerance):
     topology_preserving_simplifier = QgsTopologyPreservingSimplifier(
@@ -155,6 +163,12 @@ def spilt_geometry_into_parts(geometry):
 
     return subdivided_parts
 
+def organiseID_by_resourceID(organiseID):
+    match = re.match(r'([A-Za-z-]+)(\d+)$', organiseID)
+    return match.groups() if match else ('', '0')
+    
+sorted_data_rows = sorted(data_rows, key=lambda row: organiseID_by_resourceID(row[id_index]))
+
 
 for feature in memory_layer.getFeatures():
     if (
@@ -175,7 +189,9 @@ for feature in memory_layer.getFeatures():
                 for subdivided_part in subdivided_parts[1:]:
                     write_polygon_geometry_and_resource_id_to_a_new_feature(
                         memory_layer, feature, subdivided_part
-                    )
+                    ) 
+
+   
 memory_layer.commitChanges()
 
 options = QgsVectorFileWriter.SaveVectorOptions()
@@ -183,6 +199,7 @@ options.driverName = "CSV"
 options.fileEncoding = "UTF-8"
 options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
 options.layerOptions = ["GEOMETRY=AS_WKT"]
+options.sorted_data_rows = sorted_data_rows
 
 success, message = QgsVectorFileWriter.writeAsVectorFormat(
     layer=memory_layer, fileName=str(outputfile_path), options=options
